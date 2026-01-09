@@ -1,8 +1,8 @@
 use std::{
-    fs::{self, OpenOptions},
+    fs,
     os::unix,
     path::{Path, PathBuf},
-    process::exit,
+    process,
 };
 
 use clap::{Parser, Subcommand};
@@ -158,6 +158,24 @@ fn apply_symlink(policy_path: &Path, project_path: &Path) {
     let policy_target = fs::read_link(policy_path)
         .unwrap_or_else(|e| panic!("Failed to read symlink {}: {}", policy_path.display(), e));
 
+    if project_path.is_symlink() {
+        let project_target = fs::read_link(project_path)
+            .unwrap_or_else(|e| panic!("Failed to read symlink {}: {}", project_path.display(), e));
+
+        if policy_target == project_target {
+            return;
+        } else {
+            fs::remove_file(project_path).unwrap_or_else(|e| {
+                panic!("Failed to remove symlink {}: {}", project_path.display(), e)
+            });
+        }
+    } else {
+        panic!(
+            "Cannot create symlink at {}: path exists and is not a symlink",
+            project_path.display()
+        );
+    }
+
     unix::fs::symlink(policy_target, project_path)
         .unwrap_or_else(|e| panic!("Failed to create symlink {}: {}", project_path.display(), e));
 }
@@ -179,7 +197,7 @@ fn apply_required(required: &[String]) {
     for file in required {
         let path = Path::new(file);
         if !path.is_file() {
-            OpenOptions::new()
+            fs::OpenOptions::new()
                 .create(true)
                 .write(true)
                 .open(path)
@@ -200,7 +218,7 @@ fn main() {
             let required_ok = check_required(&policy.required);
 
             if !(includes_ok && required_ok) {
-                exit(1);
+                process::exit(1);
             }
         }
         Command::Apply => {
