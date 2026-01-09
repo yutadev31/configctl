@@ -147,7 +147,7 @@ fn apply_regular_file(policy_path: &Path, project_path: &Path) {
         .unwrap_or_else(|e| panic!("Failed to read {}: {}", policy_path.display(), e));
 
     let parent_dir = project_path.parent().unwrap();
-    fs::create_dir_all(&parent_dir)
+    fs::create_dir_all(parent_dir)
         .unwrap_or_else(|e| panic!("Failed to create directory {}: {}", parent_dir.display(), e));
 
     fs::write(project_path, policy_content)
@@ -182,7 +182,7 @@ fn apply_required(required: &[String]) {
             OpenOptions::new()
                 .create(true)
                 .write(true)
-                .open(&path)
+                .open(path)
                 .unwrap_or_else(|e| panic!("Failed to create {}: {}", path.display(), e));
         }
     }
