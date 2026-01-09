@@ -21,9 +21,22 @@ enum Command {
 }
 
 #[derive(Debug, Deserialize)]
+struct ConfigctlToml {
+    policy: String,
+}
+
+#[derive(Debug, Deserialize)]
 struct PolicyToml {
     includes: Vec<String>,
     required: Vec<String>,
+}
+
+fn read_configctl_toml() -> ConfigctlToml {
+    let path = "configctl.toml";
+    let content =
+        fs::read_to_string(path).unwrap_or_else(|e| panic!("Failed to read {}: {}", path, e));
+
+    toml::from_str(&content).expect("Failed to parse configctl.toml")
 }
 
 fn read_policy(policy_dir: &Path) -> PolicyToml {
@@ -211,7 +224,8 @@ fn main() {
 
     match cli.command {
         Command::Check => {
-            let policy_dir = Path::new("../config-policy");
+            let config = read_configctl_toml();
+            let policy_dir = Path::new(&config.policy);
             let policy = read_policy(policy_dir);
 
             let includes_ok = check_includes(policy_dir, &policy.includes);
@@ -222,7 +236,8 @@ fn main() {
             }
         }
         Command::Apply => {
-            let policy_dir = Path::new("../config-policy");
+            let config = read_configctl_toml();
+            let policy_dir = Path::new(&config.policy);
             let policy = read_policy(policy_dir);
 
             apply_includes(policy_dir, &policy.includes);
