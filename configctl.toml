@@ -1,1 +1,1 @@
-policy = "../rust-config"
+policy = "../config-policies/rust"

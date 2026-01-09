@@ -27,6 +27,7 @@ struct ConfigctlToml {
 
 #[derive(Debug, Deserialize)]
 struct PolicyToml {
+    base: Option<String>,
     includes: Vec<String>,
     required: Vec<String>,
 }
@@ -219,6 +220,30 @@ fn apply_required(required: &[String]) {
     }
 }
 
+fn check(policy_dir: &Path) {
+    let policy = read_policy(policy_dir);
+    if let Some(base) = policy.base {
+        check(&policy_dir.join(base));
+    }
+
+    let includes_ok = check_includes(policy_dir, &policy.includes);
+    let required_ok = check_required(&policy.required);
+
+    if !(includes_ok && required_ok) {
+        process::exit(1);
+    }
+}
+
+fn apply(policy_dir: &Path) {
+    let policy = read_policy(policy_dir);
+    if let Some(base) = policy.base {
+        apply(&policy_dir.join(base));
+    }
+
+    apply_includes(policy_dir, &policy.includes);
+    apply_required(&policy.required);
+}
+
 fn main() {
     let cli = Cli::parse();
 
@@ -226,22 +251,14 @@ fn main() {
         Command::Check => {
             let config = read_configctl_toml();
             let policy_dir = Path::new(&config.policy);
-            let policy = read_policy(policy_dir);
 
-            let includes_ok = check_includes(policy_dir, &policy.includes);
-            let required_ok = check_required(&policy.required);
-
-            if !(includes_ok && required_ok) {
-                process::exit(1);
-            }
+            check(policy_dir);
         }
         Command::Apply => {
             let config = read_configctl_toml();
             let policy_dir = Path::new(&config.policy);
-            let policy = read_policy(policy_dir);
 
-            apply_includes(policy_dir, &policy.includes);
-            apply_required(&policy.required);
+            apply(policy_dir);
         }
     }
 }
