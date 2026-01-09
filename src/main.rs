@@ -1,5 +1,6 @@
 use std::{
-    fs,
+    fs::{self, OpenOptions},
+    os::unix,
     path::{Path, PathBuf},
     process::exit,
 };
@@ -141,6 +142,52 @@ fn check_required(required: &[String]) -> bool {
     !failed
 }
 
+fn apply_regular_file(policy_path: &Path, project_path: &Path) {
+    let policy_content = fs::read_to_string(policy_path)
+        .unwrap_or_else(|e| panic!("Failed to read {}: {}", policy_path.display(), e));
+
+    let parent_dir = project_path.parent().unwrap();
+    fs::create_dir_all(&parent_dir)
+        .unwrap_or_else(|e| panic!("Failed to create directory {}: {}", parent_dir.display(), e));
+
+    fs::write(project_path, policy_content)
+        .unwrap_or_else(|e| panic!("Failed to write {}: {}", project_path.display(), e));
+}
+
+fn apply_symlink(policy_path: &Path, project_path: &Path) {
+    let policy_target = fs::read_link(policy_path)
+        .unwrap_or_else(|e| panic!("Failed to read symlink {}: {}", policy_path.display(), e));
+
+    unix::fs::symlink(policy_target, project_path)
+        .unwrap_or_else(|e| panic!("Failed to create symlink {}: {}", project_path.display(), e));
+}
+
+fn apply_includes(policy_dir: &Path, includes: &[String]) {
+    for file in includes {
+        let policy_path = policy_dir.join("template").join(file);
+        let project_path = PathBuf::from(file);
+
+        if policy_path.is_file() {
+            apply_regular_file(&policy_path, &project_path);
+        } else if policy_path.is_symlink() {
+            apply_symlink(&policy_path, &project_path);
+        }
+    }
+}
+
+fn apply_required(required: &[String]) {
+    for file in required {
+        let path = Path::new(file);
+        if !path.is_file() {
+            OpenOptions::new()
+                .create(true)
+                .write(true)
+                .open(&path)
+                .unwrap_or_else(|e| panic!("Failed to create {}: {}", path.display(), e));
+        }
+    }
+}
+
 fn main() {
     let cli = Cli::parse();
 
@@ -156,6 +203,12 @@ fn main() {
                 exit(1);
             }
         }
-        Command::Apply => {}
+        Command::Apply => {
+            let policy_dir = Path::new("../config-policy");
+            let policy = read_policy(policy_dir);
+
+            apply_includes(policy_dir, &policy.includes);
+            apply_required(&policy.required);
+        }
     }
 }
