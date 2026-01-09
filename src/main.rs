@@ -212,7 +212,7 @@ fn apply_required(required: &[String]) {
         if !path.is_file() {
             fs::OpenOptions::new()
                 .create(true)
-                .write(true)
+                .append(true)
                 .open(path)
                 .unwrap_or_else(|e| panic!("Failed to create {}: {}", path.display(), e));
         }
