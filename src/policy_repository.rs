@@ -1,4 +1,4 @@
-use std::{env, path::PathBuf, process};
+use std::{path::PathBuf, process};
 
 pub fn clone(repo: &str) -> PathBuf {
     let repo_name = repo.split('/').next_back().unwrap();
@@ -9,9 +9,9 @@ pub fn clone(repo: &str) -> PathBuf {
 
     if repo_dir.exists() {
         println!("Running git pull...");
-        env::set_current_dir(&repo_dir).expect("Failed to change directory");
         process::Command::new("git")
             .arg("pull")
+            .current_dir(&repo_dir)
             .status()
             .expect("Failed to clone repository");
         println!("Success git pull");
