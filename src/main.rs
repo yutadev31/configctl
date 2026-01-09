@@ -7,7 +7,7 @@ use clap::Parser;
 
 use crate::{
     cli::{Cli, Command},
-    commands::{apply::apply, check::check},
+    commands::{apply::apply, check::check, init::init},
     configs::configctl_toml::read_configctl_toml,
     policy_repository::clone,
 };
@@ -16,6 +16,10 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
+        Command::Init { repository, path } => {
+            init(repository, path);
+            println!("Successfully initialized configctl");
+        }
         Command::Check => {
             let config = read_configctl_toml();
             let policy_dir = clone(&config.policy.repository).join(config.policy.path);

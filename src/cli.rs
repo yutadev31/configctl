@@ -8,6 +8,13 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
+    Init {
+        #[arg()]
+        repository: String,
+
+        #[arg()]
+        path: String,
+    },
     Check,
     Apply,
 }
