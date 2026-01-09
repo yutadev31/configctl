@@ -1,29 +1,16 @@
 pub mod cli;
 pub mod commands;
-pub mod policy;
-
-use std::{fs, path::Path};
+pub mod configs;
+pub mod policy_repository;
 
 use clap::Parser;
-use serde::Deserialize;
 
 use crate::{
     cli::{Cli, Command},
     commands::{apply::apply, check::check},
+    configs::configctl_toml::read_configctl_toml,
+    policy_repository::clone,
 };
-
-#[derive(Debug, Deserialize)]
-struct ConfigctlToml {
-    policy: String,
-}
-
-fn read_configctl_toml() -> ConfigctlToml {
-    let path = "configctl.toml";
-    let content =
-        fs::read_to_string(path).unwrap_or_else(|e| panic!("Failed to read {}: {}", path, e));
-
-    toml::from_str(&content).expect("Failed to parse configctl.toml")
-}
 
 fn main() {
     let cli = Cli::parse();
@@ -31,15 +18,17 @@ fn main() {
     match cli.command {
         Command::Check => {
             let config = read_configctl_toml();
-            let policy_dir = Path::new(&config.policy);
+            let policy_dir = clone(&config.policy.repository).join(config.policy.path);
 
-            check(policy_dir);
+            check(&policy_dir);
+            println!("Successfully checked policy");
         }
         Command::Apply => {
             let config = read_configctl_toml();
-            let policy_dir = Path::new(&config.policy);
+            let policy_dir = clone(&config.policy.repository).join(config.policy.path);
 
-            apply(policy_dir);
+            apply(&policy_dir);
+            println!("Successfully applied policy");
         }
     }
 }

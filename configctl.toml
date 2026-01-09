@@ -1,1 +1,3 @@
-policy = "../config-policies/rust"
+[policy]
+repository = "https://github.com/yutadev31/config-policies.git"
+path = "rust"

@@ -4,18 +4,31 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::policy::read_policy;
+use crate::configs::policy::read_policy;
 
 fn apply_regular_file(policy_path: &Path, project_path: &Path) {
     let policy_content = fs::read_to_string(policy_path)
         .unwrap_or_else(|e| panic!("Failed to read {}: {}", policy_path.display(), e));
 
     let parent_dir = project_path.parent().unwrap();
-    fs::create_dir_all(parent_dir)
-        .unwrap_or_else(|e| panic!("Failed to create directory {}: {}", parent_dir.display(), e));
+    if parent_dir != Path::new("") && !parent_dir.is_dir() {
+        fs::create_dir_all(parent_dir).unwrap_or_else(|e| {
+            panic!("Failed to create directory {}: {}", parent_dir.display(), e)
+        });
+
+        println!("Created directory {}", parent_dir.display());
+    } else if project_path.is_file() {
+        let project_content = fs::read_to_string(project_path)
+            .unwrap_or_else(|e| panic!("Failed to read {}: {}", project_path.display(), e));
+
+        if project_content == policy_content {
+            return;
+        }
+    }
 
     fs::write(project_path, policy_content)
         .unwrap_or_else(|e| panic!("Failed to write {}: {}", project_path.display(), e));
+    println!("Wrote file {}", project_path.display());
 }
 
 fn apply_symlink(policy_path: &Path, project_path: &Path) {
@@ -32,6 +45,7 @@ fn apply_symlink(policy_path: &Path, project_path: &Path) {
             fs::remove_file(project_path).unwrap_or_else(|e| {
                 panic!("Failed to remove symlink {}: {}", project_path.display(), e)
             });
+            println!("Removed symlink {}", project_path.display());
         }
     } else if project_path.exists() {
         panic!(
@@ -42,6 +56,7 @@ fn apply_symlink(policy_path: &Path, project_path: &Path) {
 
     unix::fs::symlink(policy_target, project_path)
         .unwrap_or_else(|e| panic!("Failed to create symlink {}: {}", project_path.display(), e));
+    println!("Created symlink {}", project_path.display());
 }
 
 fn apply_includes(policy_dir: &Path, includes: &[String]) {

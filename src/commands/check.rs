@@ -4,7 +4,7 @@ use std::{
     process,
 };
 
-use crate::policy::read_policy;
+use crate::configs::policy::read_policy;
 
 fn check_regular_file(policy_path: &Path, project_path: &Path) -> bool {
     let policy_content = fs::read_to_string(policy_path)
