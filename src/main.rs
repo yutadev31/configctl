@@ -182,7 +182,7 @@ fn apply_symlink(policy_path: &Path, project_path: &Path) {
                 panic!("Failed to remove symlink {}: {}", project_path.display(), e)
             });
         }
-    } else {
+    } else if project_path.exists() {
         panic!(
             "Cannot create symlink at {}: path exists and is not a symlink",
             project_path.display()
