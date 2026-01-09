@@ -198,10 +198,10 @@ fn apply_includes(policy_dir: &Path, includes: &[String]) {
         let policy_path = policy_dir.join("template").join(file);
         let project_path = PathBuf::from(file);
 
-        if policy_path.is_file() {
-            apply_regular_file(&policy_path, &project_path);
-        } else if policy_path.is_symlink() {
+        if policy_path.is_symlink() {
             apply_symlink(&policy_path, &project_path);
+        } else if policy_path.is_file() {
+            apply_regular_file(&policy_path, &project_path);
         }
     }
 }
