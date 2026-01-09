@@ -1,0 +1,4 @@
+{
+  "recommendations": ["EditorConfig.EditorConfig", "rust-lang.rust-analyzer"],
+  "unwantedRecommendations": []
+}
