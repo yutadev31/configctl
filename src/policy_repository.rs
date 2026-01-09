@@ -1,7 +1,7 @@
 use std::{env, path::PathBuf, process};
 
 pub fn clone(repo: &str) -> PathBuf {
-    let repo_name = repo.split('/').last().unwrap();
+    let repo_name = repo.split('/').next_back().unwrap();
     let repo_dir = dirs::state_dir()
         .expect("Failed to get state directory")
         .join("configctl")
