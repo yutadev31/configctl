@@ -1,6 +1,8 @@
-use std::fs;
+use std::{fs, process};
 
 use serde::{Deserialize, Serialize};
+
+const CONFIG_FILENAME: &str = "configctl.toml";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
@@ -13,10 +15,13 @@ pub struct Policy {
     pub path: String,
 }
 
-pub fn read_configctl_toml() -> Config {
-    let path = "configctl.toml";
-    let content =
-        fs::read_to_string(path).unwrap_or_else(|e| panic!("Failed to read {}: {}", path, e));
+impl Config {
+    pub fn from_file() -> Self {
+        let toml = fs::read_to_string(CONFIG_FILENAME).unwrap_or_else(|e| {
+            eprintln!("Failed to read {}: {}", CONFIG_FILENAME, e);
+            process::exit(1);
+        });
 
-    toml::from_str(&content).expect("Failed to parse configctl.toml")
+        toml::from_str(&toml).expect(&format!("Failed to parse {CONFIG_FILENAME}"))
+    }
 }

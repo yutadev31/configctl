@@ -1,6 +1,8 @@
-use std::{fs, path::Path};
+use std::{fs, path::Path, process};
 
 use serde::Deserialize;
+
+const POLICY_FILENAME: &str = "policy.toml";
 
 #[derive(Debug, Deserialize)]
 pub struct PolicyToml {
@@ -9,10 +11,13 @@ pub struct PolicyToml {
     pub required: Vec<String>,
 }
 
-pub fn read_policy(policy_dir: &Path) -> PolicyToml {
-    let path = policy_dir.join("policy.toml");
-    let content = fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("Failed to read {}: {}", path.display(), e));
+impl PolicyToml {
+    pub fn from_file(dir: &Path) -> Self {
+        let toml = fs::read_to_string(dir.join(POLICY_FILENAME)).unwrap_or_else(|e| {
+            eprintln!("Failed to read {}: {}", POLICY_FILENAME, e);
+            process::exit(1);
+        });
 
-    toml::from_str(&content).expect("Failed to parse policy.toml")
+        toml::from_str(&toml).expect(&format!("Failed to parse {POLICY_FILENAME}"))
+    }
 }

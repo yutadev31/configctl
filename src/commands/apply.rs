@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::configs::policy::read_policy;
+use crate::configs::policy::PolicyToml;
 
 fn apply_regular_file(policy_path: &Path, project_path: &Path) {
     let policy_content = fs::read_to_string(policy_path)
@@ -86,7 +86,7 @@ fn apply_required(required: &[String]) {
 }
 
 pub fn apply(policy_dir: &Path) {
-    let policy = read_policy(policy_dir);
+    let policy = PolicyToml::from_file(policy_dir);
     if let Some(base) = policy.base {
         apply(&policy_dir.join(base));
     }

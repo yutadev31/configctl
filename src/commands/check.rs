@@ -4,7 +4,7 @@ use std::{
     process,
 };
 
-use crate::configs::policy::read_policy;
+use crate::configs::policy::PolicyToml;
 
 fn check_regular_file(policy_path: &Path, project_path: &Path) -> bool {
     let policy_content = fs::read_to_string(policy_path)
@@ -115,7 +115,7 @@ fn check_required(required: &[String]) -> bool {
 }
 
 pub fn check(policy_dir: &Path) {
-    let policy = read_policy(policy_dir);
+    let policy = PolicyToml::from_file(policy_dir);
     if let Some(base) = policy.base {
         check(&policy_dir.join(base));
     }
