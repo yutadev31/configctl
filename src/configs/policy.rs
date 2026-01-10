@@ -18,6 +18,7 @@ impl PolicyToml {
             process::exit(1);
         });
 
-        toml::from_str(&toml).expect(&format!("Failed to parse {POLICY_FILENAME}"))
+        toml::from_str(&toml)
+            .unwrap_or_else(|e| panic!("Failed to parse {}: {}", POLICY_FILENAME, e))
     }
 }
